@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/bilal-of/tinyapp/issues"
   },
-  "homepage": "https://github.com/bilal-of/tinyapp#readme"
+  "homepage": "https://github.com/bilal-of/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
 }
