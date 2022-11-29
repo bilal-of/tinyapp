@@ -2,7 +2,12 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
-app.set("view engine", "ejs");
+app.set("view engine", "ejs"); 
+
+const generateRandomString = function () {
+  const result = Math.random().toString(36).substring(2,8);
+  return result;
+} 
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -13,7 +18,11 @@ app.use(express.urlencoded({ extended: true }));
 
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  const newKey = generateRandomString() 
+  const newURL = req.body['longURL'] 
+  urlDatabase[newKey] = newURL
+  console.log(urlDatabase) 
+  res.redirect(`urls/${newKey}`); 
 });
 
 app.get("/", (req, res) => {
@@ -43,14 +52,16 @@ app.get("/urls/:id", (req, res) => {
     longURL: urlDatabase[req.params.id] 
   };
   res.render("urls_show", templateVars);
+}); 
+
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id]
+  res.redirect(longURL);
 });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 }); 
 
-const generateRandomString = function () {
-  const result = Math.random().toString(36).substring(2,8);
-  return result;
-} 
-generateRandomString()
+
+//generateRandomString()
