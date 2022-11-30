@@ -25,11 +25,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`urls/${newKey}`); 
 }); 
 
-app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
-  delete urlDatabase[id];
-  res.redirect("/urls");
-});
+
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -63,6 +59,19 @@ app.get("/urls/:id", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id]
   res.redirect(longURL);
+}); 
+
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  delete urlDatabase[id];
+  res.redirect("/urls");
+}); 
+
+app.post("/urls/:id", (req, res) => {
+  const id = req.params.id;  
+  urlDatabase[req.params.id] = req.body.longURL
+
+  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
@@ -70,4 +79,6 @@ app.listen(PORT, () => {
 }); 
 
 
-//generateRandomString()
+//generateRandomString() 
+
+
