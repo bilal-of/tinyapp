@@ -20,9 +20,9 @@
       </div> 
       
     </div> 
-    <% if(username) { %>
+    <% if(user) { %>
       <form class="form-inline" action='/logout' method='POST'>
-        <p class='navbar-text nav-link' style='margin-bottom: 0;'>Logged in as: <%= username %>!</p>
+        <p class='navbar-text nav-link' style='margin-bottom: 0;'>Logged in as: <%= user.email %></p>
         <div class='form-group'> 
           <button type='submit' class="btn btn-outline">Log Out</button>
         </div>
@@ -40,7 +40,9 @@
           <button type='submit' class="btn btn-outline">Login</button>
 
           <div class='form-group'> 
-          </div>
+          </div> 
+        </form>
+
       </div>
     <% }  %>  
   </nav>
