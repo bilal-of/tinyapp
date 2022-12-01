@@ -157,8 +157,11 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 }); 
 
-app.get("/login", (req, res) => {
-  res.redirect("/urls");
+app.get("/login", (req, res) => {  
+  const templateVars = { 
+    user: getUserfromReq(req)
+  }; 
+  res.render("urls_login", templateVars);
 });  
 
 
