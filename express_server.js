@@ -2,7 +2,7 @@ const express = require("express");
 const cookieParser = require('cookie-parser'); 
 var cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
-
+const {getUserByEmail} = require("./helpers.js");
 const app = express();
 const PORT = 8080;
 app.use(cookieParser()) 
@@ -51,15 +51,6 @@ const getUserfromReq = function (user_id, database) {
   } 
   return userUrl
 }; 
-
-const getUserByEmail = function (email, database) { 
-  for (let user_id in database) { 
-    if (database[user_id].email === email) {
-      return database[user_id]
-    }
-  } 
-  return null
-} 
 
 function urlsForUser(id, database) {
   const obj = {};
@@ -157,9 +148,6 @@ app.post("/urls/:id/delete", (req, res) => {
   }
   const id = req.params.id; 
   const user = users[req.session.user_id]   
-  console.log('ID', id) 
-  console.log('User', user) 
-  console.log(urlDatabase[id])
   if (user.id === urlDatabase[id].userId) {
     delete urlDatabase[id]; 
     return res.redirect("/urls");  
@@ -170,9 +158,7 @@ app.post("/urls/:id/delete", (req, res) => {
 }); 
 
 app.post("/urls/:id", (req, res) => {
-  const id = req.params.id;  
   urlDatabase[req.params.id].longURL = req.body.longURL
-
   res.redirect("/urls");
 }); 
 
@@ -221,8 +207,7 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   const email = req.body.email 
-  const password = req.body.password 
-  bcrypt.compareSync(password, user.password)
+  const password = req.body.password  
   if (email === '' || password === '') {
     res.status(403).send("Cannot leave fields empty")
   } else {
@@ -233,7 +218,7 @@ app.post("/login", (req, res) => {
       if (!bcrypt.compareSync(password, user.password)) {
         res.status(403).send("Passwords is not valid")
       } else {
-        req.session.user_id = users[user].id
+        req.session.user_id = user.id
         res.redirect("/urls")
       }
     }
@@ -251,6 +236,5 @@ app.listen(PORT, () => {
 }); 
 
 
-//generateRandomString() 
 
 
