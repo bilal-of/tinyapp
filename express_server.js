@@ -1,9 +1,15 @@
 const express = require("express"); 
-const cookieParser = require('cookie-parser');
+const cookieParser = require('cookie-parser'); 
+var cookieSession = require('cookie-session')
+const bcrypt = require("bcryptjs");
 
 const app = express();
 const PORT = 8080;
-app.use(cookieParser())
+app.use(cookieParser()) 
+app.use(cookieSession({
+  name: "session",
+  keys: ['key1', 'key2']
+}));
 
 app.set("view engine", "ejs"); 
 
@@ -37,7 +43,7 @@ const users = {
 }; 
 
 const getUserfromReq = function (user_id, database) {  
-  const userUrl = {} 
+  let userUrl 
   for (const url in database) { 
     if (database[url].userID === user_id) {
       userUrl[url] = database[url].longURL
@@ -68,7 +74,7 @@ function urlsForUser(id, database) {
 app.use(express.urlencoded({ extended: true }));
 
 app.post("/urls", (req, res) => { 
-  const userId = req.cookies["user_id"]
+  const userId = req.session.user_id
   if (!userId) {
     res.status(400).send("You are not logged in");  
     return
@@ -84,10 +90,10 @@ app.post("/urls", (req, res) => {
 }); 
 
 app.get("/urls", (req, res) => { 
-  if (req.cookies["user_id"]) { 
+  if (req.session.user_id) { 
     const templateVars = {  
-      urls: urlsForUser(req.cookies["user_id"].id, urlDatabase),
-      user: users[req.cookies["user_id"]]   
+      urls: urlsForUser(req.session.user_id.id, urlDatabase),
+      user: users[req.session.user_id]   
     } 
     res.render("urls_index", templateVars); 
     return
@@ -98,9 +104,9 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => { 
   const templateVars = { 
-    user: users[req.cookies["user_id"]], 
+    user: users[req.session.user_id], 
   }; 
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     res.redirect("/login") 
     return
   }
@@ -108,7 +114,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => { 
-  const userId = req.cookies["user_id"]
+  const userId = req.session.user_id
   if (!userId) {
     res.status(400).send("You are not logged in");  
     return
@@ -144,13 +150,13 @@ app.get("/u/:id", (req, res) => {
 }); 
 
 app.post("/urls/:id/delete", (req, res) => {
-  const userId = req.cookies["user_id"]
+  const userId = req.session.user_id
   if (!userId) {
     res.status(400).send("You are not logged in");  
     return
   }
   const id = req.params.id; 
-  const user = users[req.cookies["user_id"]]   
+  const user = users[req.session.user_id]   
   console.log('ID', id) 
   console.log('User', user) 
   console.log(urlDatabase[id])
@@ -172,9 +178,9 @@ app.post("/urls/:id", (req, res) => {
 
 app.get("/register", (req, res) => { 
   const templateVars = { 
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   }; 
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     res.redirect("/urls")  
     return
   }
@@ -191,13 +197,13 @@ app.post("/register", (req, res) => {
     return;
   }
   const id = generateRandomString(); 
+  const hashedPassword = bcrypt.hashSync(req.body.password, 10)
   users[id] = {
     id, 
     email: req.body.email, 
-    password: req.body.password
+    password: hashedPassword
   }  
-  res.cookie('user_id', id)  
-  console.log(users)
+  req.session.user_id = users[id].id  
   res.redirect("/urls");
 }); 
 
@@ -205,7 +211,7 @@ app.get("/login", (req, res) => {
   const templateVars = { 
     user: getUserfromReq(req)
   }; 
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     res.redirect("/urls") 
     return
   }
@@ -216,6 +222,7 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email 
   const password = req.body.password 
+  bcrypt.compareSync(password, user.password)
   if (email === '' || password === '') {
     res.status(403).send("Cannot leave fields empty")
   } else {
@@ -223,10 +230,10 @@ app.post("/login", (req, res) => {
     if (!user) {
       res.status(403).send("User not found")
     } else { 
-      if (password !== user.password) {
+      if (!bcrypt.compareSync(password, user.password)) {
         res.status(403).send("Passwords is not valid")
       } else {
-        res.cookie('user_id', user.id) 
+        req.session.user_id = users[user].id
         res.redirect("/urls")
       }
     }
@@ -235,7 +242,7 @@ app.post("/login", (req, res) => {
  
 
 app.post("/logout", (req, res) => { 
-  res.clearCookie('user_id')
+  req.session = null;
   res.redirect("/login");
 });
 
